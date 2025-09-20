@@ -7,14 +7,10 @@
 int main() {
     auto points = readPointsFromFile("points.txt");
 
-    std::cout << "Points:\n";
-    for (const auto& p : points) {
-        std::cout << p.toString() << "\n";
-    }
-
     std::cout << "Convex hull:\n";
     std::vector<Point> hull = Jarvis(points).first;
     for (const auto& p : hull) {
         std::cout << p.toString() << "\n";
     }
+    savePointsToFile(hull, "output_points.txt");
 }

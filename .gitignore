@@ -5,6 +5,7 @@
 *.out
 
 points.txt
+output_points.txt
 
 # Логи
 *.log

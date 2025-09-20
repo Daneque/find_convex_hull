@@ -2,6 +2,10 @@
 #include <fstream>
 #include <sstream>
 #include <iostream>
+#include <vector>
+#include <string>
+#include "Point.h"
+
 
 std::vector<Point> readPointsFromFile(const std::string& filename) {
     std::ifstream file(filename);
@@ -23,4 +27,19 @@ std::vector<Point> readPointsFromFile(const std::string& filename) {
     }
 
     return points;
+}
+
+
+void savePointsToFile(const std::vector<Point>& points, const std::string& filename) {
+    std::ofstream file(filename);
+
+    if (!file.is_open()) {
+        throw std::runtime_error("Не удалось открыть файл: " + filename);
+    }
+
+    for (const auto& p : points) {
+        file << p.getX() << ", " << p.getY() << "\n";
+    }
+
+    file.close();
 }

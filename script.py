@@ -39,6 +39,4 @@ print(f'Time = {time.time() - start}')
 print("Convex hull was found -> Read hull")
 hull = read_from_file("output_points.txt")
 print("Hull was saved -> Plot the hull")
-print(hull)
 plot_hull(points, hull)
-

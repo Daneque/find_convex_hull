@@ -53,9 +53,34 @@ std::pair<double, size_t> new_point_convex_hull(std::vector<Point>& points, Poin
 }
 
 // Заглушка алгоритма Джарвиса
-std::vector<Point> Jarvis(const std::vector<Point>& points) {
-    std::vector<Point> hull;
-    // Реализация алгоритма сюда
-    std::cout << "Jarvis algorithm placeholder\n";
-    return hull;
+std::pair<std::vector<Point>, std::vector<size_t>> Jarvis(std::vector<Point>& points) {
+
+    std::vector<double> ys = {};
+
+    for(size_t i = 0; i < points.size(); i++) {
+        ys.push_back(points[i].getY());
+    }
+
+    auto min_y_point = std::min_element(ys.begin(), ys.end());
+
+    size_t min_y_idx = std::distance(ys.begin(), min_y_point);
+    size_t curr_idx = min_y_idx;
+    Point curr_point = points[min_y_idx];
+    std::pair<Point, Point> direction = {Point(0, 0), Point(1, 0)};
+
+    std::vector<Point> hull = {curr_point};
+    std::vector<size_t> hull_idxs = {curr_idx};
+
+    do {
+        size_t curr_idx = new_point_convex_hull(points, curr_point, curr_idx, direction).second;
+        direction = {curr_point, points[curr_idx]};
+        curr_point = points[curr_idx];
+
+        hull.push_back(curr_point);
+        hull_idxs.push_back(curr_idx);
+    } while (!(curr_point == hull[0]));
+
+    return {hull, hull_idxs};
+
+
 }

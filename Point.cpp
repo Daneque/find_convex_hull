@@ -25,3 +25,10 @@ Point Point::operator-(const Point& other) const {
 Point Point::operator*(const Point& other) const {
     return Point(x * other.x, y * other.y);
 }
+
+bool Point::operator==(const Point& other) const {
+    const double eps = 1e-10;
+    return (std::fabs(x - other.x) < eps) && (std::fabs(y - other.y) < eps);
+}
+
+

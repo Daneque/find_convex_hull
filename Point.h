@@ -20,4 +20,5 @@ public:
     Point operator+(const Point& other) const;
     Point operator-(const Point& other) const;
     Point operator*(const Point& other) const; // поэлементное
+    bool operator==(const Point& other) const;
 };

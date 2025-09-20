@@ -10,10 +10,12 @@ std::pair<double, size_t> new_point_convex_hull(std::vector<Point>& points, Poin
     std::vector<double> cosines = {};
 
     for(size_t i = 0; i < points.size(); i++) {
+
         if (i == curr_idx) {
             cosines.push_back(-3);
             continue;
         }
+
         cosines.push_back(cosine_along_line(curr_point, points[i], direction));
     }
 
@@ -52,7 +54,7 @@ std::pair<double, size_t> new_point_convex_hull(std::vector<Point>& points, Poin
 
 }
 
-// Заглушка алгоритма Джарвиса
+
 std::pair<std::vector<Point>, std::vector<size_t>> Jarvis(std::vector<Point>& points) {
 
     std::vector<double> ys = {};
@@ -72,7 +74,8 @@ std::pair<std::vector<Point>, std::vector<size_t>> Jarvis(std::vector<Point>& po
     std::vector<size_t> hull_idxs = {curr_idx};
 
     do {
-        size_t curr_idx = new_point_convex_hull(points, curr_point, curr_idx, direction).second;
+        size_t maxcos_idx = new_point_convex_hull(points, curr_point, curr_idx, direction).second;
+        curr_idx = maxcos_idx;
         direction = {curr_point, points[curr_idx]};
         curr_point = points[curr_idx];
 

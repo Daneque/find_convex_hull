@@ -27,6 +27,8 @@ double cosine_along_line(const Point& p, const Point& q, const std::pair<Point, 
 
     if ((norm_v1 == 0) || (norm_v2 == 0)) {
         std::cout << "Zero norm!\nNorm v1 = " << norm_v1 << ", Norm v2 = " << norm_v2 << "\n";
+        std::cout << "v1 = " << v1.toString() << " v2 = " << v2.toString() << std::endl;
+        std::cout << "q = " << q.toString() << " p = " << p.toString() << " direction = " << line.first.toString() << " " << line.second.toString() << std::endl;
     }
 
     double scalar_product = dot(v1, v2);

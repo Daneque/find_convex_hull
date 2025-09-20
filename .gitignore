@@ -1,0 +1,23 @@
+# Компилированные объекты и исполняемые файлы
+*.o
+*.obj
+*.exe
+*.out
+
+# Логи
+*.log
+
+# IDE / редакторы
+.vscode/
+*.code-workspace
+*.suo
+*.user
+*.vcxproj*
+*.xcodeproj/
+
+# Сборки / CMake
+/build/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+Makefile

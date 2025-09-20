@@ -85,5 +85,32 @@ std::pair<std::vector<Point>, std::vector<size_t>> Jarvis(std::vector<Point>& po
 
     return {hull, hull_idxs};
 
+}
 
+
+double rotate(std::pair<Point, Point>& direction, Point& p) {
+    return (direction.second.getX() - direction.first.getX()) * (p.getY() - direction.second.getY()) - (direction.second.getY() - direction.first.getY())*(p.getX() - direction.second.getX());
+}
+
+std::vector<Point> Graham(std::vector<Point>& points) {
+    double y_min = points[0].getY();
+    double x_min = points[0].getX();
+    size_t p_min_idx = 0;
+
+    for(size_t i = 0; i < points.size(); i++) {
+        if(points[i].getY() < y_min) {
+            y_min = points[i].getY();
+            x_min = points[i].getX();
+            p_min_idx = i;
+        } else {
+            if(std::abs(points[i].getY() - y_min) < 1e-10) {
+                if(std::abs(x_min - points[i].getX()) < 1e-10) {
+                    x_min = points[i].getX();
+                    p_min_idx = i;
+                }
+            }
+        }
+    }
+
+    
 }

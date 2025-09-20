@@ -4,6 +4,8 @@
 *.exe
 *.out
 
+points.txt
+
 # Логи
 *.log
 

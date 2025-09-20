@@ -13,9 +13,13 @@ int main() {
     }
 
     Point q(1, 1), w(2, 2);
-    std::vector<Point> line = {Point(0,0), Point(1,0)};
-    std::cout << "Cosine between " << q.toString() << " and " << w.toString()
-              << " = " << cosine_along_line(q, w, line) << "\n";
+    std::pair<Point, Point> line = {Point(0,0), Point(1,0)};
+    // std::cout << "Cosine between " << q.toString() << " and " << w.toString()
+    //           << " = " << cosine_along_line(q, w, line) << "\n";
 
-    auto hull = Jarvis(points);
+    // auto hull = Jarvis(points);
+
+    std::pair<double, size_t> result = new_point_convex_hull(points, points[0], 0, line);
+
+    std::cout << "val = " << result.first << " idx = " << result.second << std::endl;
 }

@@ -88,29 +88,95 @@ std::pair<std::vector<Point>, std::vector<size_t>> Jarvis(std::vector<Point>& po
 }
 
 
-double rotate(std::pair<Point, Point>& direction, Point& p) {
-    return (direction.second.getX() - direction.first.getX()) * (p.getY() - direction.second.getY()) - (direction.second.getY() - direction.first.getY())*(p.getX() - direction.second.getX());
+double rotate(Point& a, Point& b, Point& c) {
+    return (b.getX() - a.getX()) * (c.getY() - a.getY()) -
+           (b.getY() - a.getY()) * (c.getX() - a.getX());
 }
 
-std::vector<Point> Graham(std::vector<Point>& points) {
-    double y_min = points[0].getY();
-    double x_min = points[0].getX();
+
+std::pair<std::vector<Point>, std::vector<size_t>> Graham(std::vector<Point>& points) {
+    
     size_t p_min_idx = 0;
 
-    for(size_t i = 0; i < points.size(); i++) {
-        if(points[i].getY() < y_min) {
-            y_min = points[i].getY();
-            x_min = points[i].getX();
+    // Find a left bottom point (min_y, min_x)
+
+    for (size_t i = 1; i < points.size(); ++i) {
+        if (points[i].getY() < points[p_min_idx].getY() ||
+            (std::abs(points[i].getY() - points[p_min_idx].getY()) < 1e-12 &&
+            points[i].getX() < points[p_min_idx].getX()))
+        {
             p_min_idx = i;
-        } else {
-            if(std::abs(points[i].getY() - y_min) < 1e-10) {
-                if(std::abs(x_min - points[i].getX()) < 1e-10) {
-                    x_min = points[i].getX();
-                    p_min_idx = i;
-                }
-            }
         }
     }
 
-    
+    Point min_p = points[p_min_idx];
+
+    // Create vector of indices, vector cosine(angle([(0,0), (1, 0)], [min_p, p_i]))
+
+    std::vector<size_t> indices(points.size());
+
+    for(size_t i = 0; i < points.size(); i++) {indices[i] = i;}
+
+    std::swap(indices[0], indices[p_min_idx]);
+
+    std::pair<Point, Point> direction = {Point(0, 0), Point(1, 0)};
+
+    std::vector<double> cosines(points.size()), dists(points.size());
+    for (size_t i = 0; i < points.size(); ++i) {
+        if (i == p_min_idx) { cosines[i] = -2.0; dists[i] = 0.0; }
+        else {
+            cosines[i] = cosine_along_line(min_p, points[i], direction);
+            dists[i]   = dist(min_p, points[i]);
+        }
+    }
+
+    // Sort by cosine values to the min_p
+
+    std::sort(indices.begin() + 1, indices.end(), [&](size_t i1, size_t i2) {
+        if(std::abs(cosines[i1] - cosines[i2]) > 1e-10) {
+            return cosines[i1] > cosines[i2];
+        }
+        return dists[i1] < dists[i2];
+    });
+
+    // Calculate convex hull
+
+    std::vector<Point> hull = {points[indices[0]], points[indices[1]]};
+    std::vector<size_t> hull_idxs = {indices[0], indices[1]};
+
+    for(size_t i = 2; i < indices.size(); i++){
+        Point next = points[indices[i]];
+        size_t next_idx = indices[i];
+
+        while(hull.size() >= 2) {
+            Point p1 = hull[hull.size() - 2];
+            Point p2 = hull[hull.size() - 1];
+
+            double rot = rotate(p1, p2, next);
+
+            if(rot > 1e-10) {break;}
+
+            if(rot > 1e-10) {
+                break;
+            } else if(rot < -1e-10) {
+                hull.pop_back();
+                hull_idxs.pop_back();
+            } else {
+                if(dist(p1, next) > dist(p1, p2)) {
+                    hull.pop_back();
+                    hull_idxs.pop_back();
+                }
+                break;
+            }
+        }
+
+        hull.push_back(next);
+        hull_idxs.push_back(next_idx);
+
+    }
+
+    hull.push_back(hull[0]);
+    hull_idxs.push_back(hull_idxs[0]);
+
+    return {hull, hull_idxs};
 }

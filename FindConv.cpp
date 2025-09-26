@@ -93,7 +93,7 @@ std::pair<std::vector<Point>, std::vector<size_t>> Graham(std::vector<Point>& po
         return {points, {}};
     }
 
-    // найти нижнюю левую точку (min_y, при равенстве min_x)
+
     size_t p_min_idx = 0;
     for (size_t i = 1; i < points.size(); ++i) {
         if (points[i].getY() < points[p_min_idx].getY() - EPS ||
@@ -105,19 +105,18 @@ std::pair<std::vector<Point>, std::vector<size_t>> Graham(std::vector<Point>& po
 
     Point min_p = points[p_min_idx];
 
-    // индексы всех точек
     std::vector<size_t> indices(points.size());
     for (size_t i = 0; i < points.size(); ++i) indices[i] = i;
     std::swap(indices[0], indices[p_min_idx]);
 
-    // направление для косинусов
+
     std::pair<Point, Point> direction = {Point(0, 0), Point(1, 0)};
 
-    // косинусы и расстояния
+
     std::vector<double> cosines(points.size()), dists(points.size());
     for (size_t i = 0; i < points.size(); ++i) {
         if (i == p_min_idx) {
-            cosines[i] = -2.0;  // заведомо минимальный косинус
+            cosines[i] = -2.0;
             dists[i] = 0.0;
         } else {
             cosines[i] = cosine_along_line(min_p, points[i], direction);
@@ -125,7 +124,6 @@ std::pair<std::vector<Point>, std::vector<size_t>> Graham(std::vector<Point>& po
         }
     }
 
-    // сортировка по углу (косинусу), при равенстве — по расстоянию
     std::sort(indices.begin() + 1, indices.end(), [&](size_t i1, size_t i2) {
         if (std::abs(cosines[i1] - cosines[i2]) > EPS) {
             return cosines[i1] > cosines[i2];
@@ -133,7 +131,6 @@ std::pair<std::vector<Point>, std::vector<size_t>> Graham(std::vector<Point>& po
         return dists[i1] < dists[i2];
     });
 
-    // построение оболочки
     std::vector<Point> hull = {points[indices[0]], points[indices[1]]};
     std::vector<size_t> hull_idxs = {indices[0], indices[1]};
 
@@ -147,12 +144,12 @@ std::pair<std::vector<Point>, std::vector<size_t>> Graham(std::vector<Point>& po
 
             double rot = rotate(p1, p2, next);
 
-            if (rot > EPS) {  // левый поворот
+            if (rot > EPS) {
                 break;
-            } else if (rot < -EPS) {  // правый поворот
+            } else if (rot < -EPS) { 
                 hull.pop_back();
                 hull_idxs.pop_back();
-            } else {  // на одной прямой
+            } else {
                 if (dist(p1, next) > dist(p1, p2)) {
                     hull.pop_back();
                     hull_idxs.pop_back();
@@ -165,38 +162,10 @@ std::pair<std::vector<Point>, std::vector<size_t>> Graham(std::vector<Point>& po
         hull_idxs.push_back(next_idx);
     }
 
-    // // если нужна замкнутая оболочка — оставляем
-    // hull.push_back(hull[0]);
-    // hull_idxs.push_back(hull_idxs[0]);
 
     return {hull, hull_idxs};
 }
 
-
-// std::vector<std::vector<Point>> Onion(std::vector<Point> points) {
-//     std::vector<std::vector<Point>> layers;
-
-//     while (points.size() >= 3) {
-//         auto [hull, hull_idxs] = Jarvis(points);
-
-//         if (hull.size() < 3) break; 
-
-//         layers.push_back(hull);
-
-//         // удалить использованные точки
-//         std::vector<Point> new_points;
-//         std::vector<bool> used(points.size(), false);
-//         for (auto idx : hull_idxs) {
-//             used[idx] = true;
-//         }
-//         for (size_t i = 0; i < points.size(); ++i) {
-//             if (!used[i]) new_points.push_back(points[i]);
-//         }
-//         points.swap(new_points);
-//     }
-
-//     return layers;
-// }
 
 std::vector<std::vector<Point>> Onion(std::vector<Point> points, const std::string& algo) {
     std::vector<std::vector<Point>> layers;
@@ -217,7 +186,6 @@ std::vector<std::vector<Point>> Onion(std::vector<Point> points, const std::stri
 
         layers.push_back(hull);
 
-        // удалить использованные точки
         std::vector<Point> new_points;
         std::vector<bool> used(points.size(), false);
         for (auto idx : hull_idxs) used[idx] = true;

@@ -3,7 +3,14 @@
 #include "Point.h"
 
 
-std::pair<double, size_t> new_point_convex_hull(std::vector<Point>& points, Point& curr_point, size_t curr_idx, std::pair<Point, Point>& direction);
+std::pair<double, size_t> new_point_convex_hull(
+    std::vector<Point>& points,
+    Point& curr_point,
+    size_t curr_idx,
+    std::pair<Point, Point>& direction
+);
 std::pair<std::vector<Point>, std::vector<size_t>> Jarvis(std::vector<Point>& points);
 double rotate(Point& a, Point& b, Point& c);
 std::pair<std::vector<Point>, std::vector<size_t>> Graham(std::vector<Point>& points);
+std::pair<std::vector<std::vector<Point>>, std::vector<std::vector<size_t>>> Conv_Kernel(std::vector<Point>& points);
+std::vector<std::vector<Point>> Onion(std::vector<Point> points, const std::string& algo);

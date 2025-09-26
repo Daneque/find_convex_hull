@@ -43,3 +43,16 @@ void savePointsToFile(const std::vector<Point>& points, const std::string& filen
 
     file.close();
 }
+
+void saveHullsToFile(const std::vector<std::vector<Point>>& points, const std::string& filename) {
+    std::ofstream file(filename);
+
+    for(int i = 1; i < points.size() + 1; i++){
+        file << "Hull " << i << "\n";
+        for(const auto& p : points[i-1]){
+            file << p.getX() << ", " << p.getY() << "\n";
+        }
+    }
+
+    file.close();
+}

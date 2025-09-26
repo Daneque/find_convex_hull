@@ -4,55 +4,7 @@
 #include <algorithm>
 #include <utility>
 #include <iostream>
-
-// std::pair<double, size_t> new_point_convex_hull(std::vector<Point>& points, Point& curr_point, size_t curr_idx, std::pair<Point, Point>& direction) {
-
-//     std::vector<double> cosines = {};
-
-//     for(size_t i = 0; i < points.size(); i++) {
-
-//         if (i == curr_idx) {
-//             cosines.push_back(-3);
-//             continue;
-//         }
-
-//         cosines.push_back(cosine_along_line(curr_point, points[i], direction));
-//     }
-
-
-//     auto max_cos_it = std::max_element(cosines.begin(), cosines.end());
-
-//     size_t max_cos_idx = std::distance(cosines.begin(), max_cos_it);
-
-//     double max_cos = cosines[max_cos_idx];
-
-
-//     std::vector<size_t> max_idxs = {};
-
-//     for(size_t i = 0; i < cosines.size(); i++) {
-//         if (std::abs(cosines[i] - max_cos) < 1e-10) {
-//             max_idxs.push_back(i);
-//         }
-//     }
-
-//     if (max_idxs.size() > 1) {
-//         std::vector<double> lens = {};
-
-//         for(size_t i = 0; i < max_idxs.size(); i++) {
-//             lens.push_back(dist(curr_point, points[max_idxs[i]]));
-//         }
-
-
-//         auto max_len_it = std::max_element(lens.begin(), lens.end());
-//         size_t max_len_idx = std::distance(lens.begin(), max_len_it);
-
-//         return std::make_pair(cosines[max_idxs[max_len_idx]], max_idxs[max_len_idx]);
-
-//     } else {
-//         return std::make_pair(max_cos, max_cos_idx);
-//     }
-
-// }
+#include <limits>
 
 std::pair<double, size_t> new_point_convex_hull(
     std::vector<Point>& points,
@@ -62,8 +14,8 @@ std::pair<double, size_t> new_point_convex_hull(
 ) {
     constexpr double EPS = 1e-10;
 
-    double best_cos = -2.0;   // меньше любого возможного косинуса
-    double best_len = -1.0;   // для разрешения равных косинусов
+    double best_cos = -2.0;
+    double best_len = -1.0;
     size_t best_idx = curr_idx;
 
     for (size_t i = 0; i < points.size(); ++i) {
@@ -73,12 +25,12 @@ std::pair<double, size_t> new_point_convex_hull(
         double d = dist(curr_point, points[i]);
 
         if (c > best_cos + EPS) {
-            // нашли лучший косинус
+
             best_cos = c;
             best_len = d;
             best_idx = i;
         } else if (std::abs(c - best_cos) <= EPS && d > best_len) {
-            // равные косинусы → выбираем дальнюю точку
+
             best_len = d;
             best_idx = i;
         }
@@ -93,10 +45,11 @@ std::pair<std::vector<Point>, std::vector<size_t>> Jarvis(std::vector<Point>& po
         return {points, {}};
     }
 
-    // найти индекс точки с минимальным Y
     size_t min_y_idx = 0;
     for (size_t i = 1; i < points.size(); ++i) {
-        if (points[i].getY() < points[min_y_idx].getY()) {
+        if (points[i].getY() < points[min_y_idx].getY() ||
+            (std::abs(points[i].getY() - points[min_y_idx].getY()) < 1e-12 &&
+             points[i].getX() < points[min_y_idx].getX())) {
             min_y_idx = i;
         }
     }
@@ -108,8 +61,12 @@ std::pair<std::vector<Point>, std::vector<size_t>> Jarvis(std::vector<Point>& po
     std::vector<Point> hull = {curr_point};
     std::vector<size_t> hull_idxs = {curr_idx};
 
-    do {
+    while (true) {
         auto [cos_val, next_idx] = new_point_convex_hull(points, curr_point, curr_idx, direction);
+
+        if (next_idx == min_y_idx) {
+            break;
+        }
 
         curr_idx = next_idx;
         direction = {curr_point, points[curr_idx]};
@@ -117,11 +74,10 @@ std::pair<std::vector<Point>, std::vector<size_t>> Jarvis(std::vector<Point>& po
 
         hull.push_back(curr_point);
         hull_idxs.push_back(curr_idx);
-    } while (curr_idx != min_y_idx);
+    }
 
     return {hull, hull_idxs};
 }
-
 
 
 double rotate(Point& a, Point& b, Point& c) {
@@ -129,8 +85,6 @@ double rotate(Point& a, Point& b, Point& c) {
            (b.getY() - a.getY()) * (c.getX() - a.getX());
 }
 
-
-// 
 
 std::pair<std::vector<Point>, std::vector<size_t>> Graham(std::vector<Point>& points) {
     constexpr double EPS = 1e-10;
@@ -211,10 +165,68 @@ std::pair<std::vector<Point>, std::vector<size_t>> Graham(std::vector<Point>& po
         hull_idxs.push_back(next_idx);
     }
 
-    // если нужна замкнутая оболочка — оставляем
-    hull.push_back(hull[0]);
-    hull_idxs.push_back(hull_idxs[0]);
+    // // если нужна замкнутая оболочка — оставляем
+    // hull.push_back(hull[0]);
+    // hull_idxs.push_back(hull_idxs[0]);
 
     return {hull, hull_idxs};
+}
+
+
+// std::vector<std::vector<Point>> Onion(std::vector<Point> points) {
+//     std::vector<std::vector<Point>> layers;
+
+//     while (points.size() >= 3) {
+//         auto [hull, hull_idxs] = Jarvis(points);
+
+//         if (hull.size() < 3) break; 
+
+//         layers.push_back(hull);
+
+//         // удалить использованные точки
+//         std::vector<Point> new_points;
+//         std::vector<bool> used(points.size(), false);
+//         for (auto idx : hull_idxs) {
+//             used[idx] = true;
+//         }
+//         for (size_t i = 0; i < points.size(); ++i) {
+//             if (!used[i]) new_points.push_back(points[i]);
+//         }
+//         points.swap(new_points);
+//     }
+
+//     return layers;
+// }
+
+std::vector<std::vector<Point>> Onion(std::vector<Point> points, const std::string& algo) {
+    std::vector<std::vector<Point>> layers;
+
+    while (points.size() >= 3) {
+        std::pair<std::vector<Point>, std::vector<size_t>> hull_result;
+
+        if (algo == "Jarvis") {
+            hull_result = Jarvis(points);
+        } else if (algo == "Graham") {
+            hull_result = Graham(points);
+        }
+
+        auto& hull = hull_result.first;
+        auto& hull_idxs = hull_result.second;
+
+        if (hull.size() < 3) break;
+
+        layers.push_back(hull);
+
+        // удалить использованные точки
+        std::vector<Point> new_points;
+        std::vector<bool> used(points.size(), false);
+        for (auto idx : hull_idxs) used[idx] = true;
+        for (size_t i = 0; i < points.size(); ++i)
+            if (!used[i]) new_points.push_back(points[i]);
+
+        points.swap(new_points);
+    }
+
+    return layers;
 }
 

@@ -1,6 +1,7 @@
 #include "Chazelle.h"
 #include "FileUtils.h"
 #include "FindConv.h"
+#include "BinCH.h"
 #include <vector>
 #include <string>
 #include "Point.h"
@@ -129,6 +130,26 @@ std::vector<std::vector<Point>> splitPoints(const std::vector<Point>& points) {
     result.insert(result.end(), rightParts.begin(), rightParts.end());
 
     return result;
+}
+
+std::vector<BinCH> GetBins(std::vector<Point>& points) {
+    std::sort(points.begin(), points.end(), [](const Point& a, const Point& b) {
+    if (a.getX() == b.getX()) 
+        return a.getY() < b.getY();
+    return a.getX() < b.getX();
+    });
+
+    auto bins = splitPoints(points);
+
+    std::vector<BinCH> bins_ch;
+
+    for(size_t i = 0; i < bins.size(); i++) {
+        BinCH bin = BinCH();
+        bin.addLayer(bins[i]);
+        bins_ch.push_back(bin);
+    }
+
+    
 }
 
 

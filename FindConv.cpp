@@ -197,4 +197,3 @@ std::vector<std::vector<Point>> Onion(std::vector<Point> points, const std::stri
 
     return layers;
 }
-

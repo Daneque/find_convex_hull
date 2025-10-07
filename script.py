@@ -3,103 +3,102 @@ import matplotlib.pyplot as plt
 import subprocess
 import time
 from scipy.spatial import ConvexHull
+from plot_scripts import plot_onion_decomposition
+from FileUtilsPy import load_points, parse_hulls, parse_func_depth
+from HullsTools import onion_layers, hulls_equal
+import os
+import pandas as pd
 
 
-def load_points(filename):
-    """
-    Читает файл с координатами точек.
-    Формат каждой строки: x, y
-    Возвращает np.array формы (N, 2)
-    """
-    points = []
-    with open(filename, 'r') as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue  # пропускаем пустые строки
-            x_str, y_str = line.split(',')
-            x = float(x_str.strip())
-            y = float(y_str.strip())
-            points.append([x, y])
-    return np.array(points)
 
-def parse_hulls(filename: str):
-    hulls = []
-    current_hull = []
+def call_cpp(input_fname, func_depth, algo="Graham", output_fname="output_hulls.txt", points_depth="points_depth.txt"):
 
-    with open(filename, "r") as f:
-        for line in f:
-            line = line.strip()
-            if not line:
-                continue  # пропускаем пустые строки
+    subprocess.run(["main.exe", input_fname, algo, func_depth, output_fname, points_depth])
 
-            if line.startswith("Hull"):
-                if current_hull:
-                    hulls.append(np.array(current_hull, dtype=float))
-                    current_hull = []
-            else:
-                x, y = map(float, line.split(","))
-                current_hull.append([x, y])
+    hulls, exec_time = parse_hulls(output_fname)
 
-        # не забываем добавить последний hull
-        if current_hull:
-            hulls.append(np.array(current_hull, dtype=float))
+    func_depth_data = parse_func_depth(func_depth)
 
-    return hulls
-
-def onion_layers(points):
-    """
-    points: np.array с формой (N,2)
-    возвращает список слоев (каждый слой — np.array)
-    """
-    layers = []
-    pts = points.copy()
-
-    while len(pts) >= 3:
-        hull = ConvexHull(pts)
-        layer = pts[hull.vertices]
-        layers.append(layer)
-
-        # удалить точки, которые входят в текущий слой
-        mask = np.ones(len(pts), dtype=bool)
-        mask[hull.vertices] = False
-        pts = pts[mask]
-
-    return layers
+    return hulls, exec_time, func_depth_data
 
 
-def hulls_equal(hulls_cpp, hulls_py, tol=1e-8):
-    """
-    hulls_cpp, hulls_py: списки слоев, каждый слой — np.array формы (N,2)
-    tol: допустимая погрешность для координат
-    """
-    if len(hulls_cpp) != len(hulls_py):
-        return False
-
-    for layer_cpp, layer_py in zip(hulls_cpp, hulls_py):
-        if len(layer_cpp) != len(layer_py):
-            return False
+def execute_fish_and_bird():
+    fnames = os.listdir("Fish_and_bird")
+    
+    # Создаем список для хранения данных
+    data = []
+    
+    for input_fname in fnames:
+        clear_name = input_fname.split('.')[0]
         
-        # проверяем, что все точки совпадают как множества
-        set_cpp = set(map(tuple, np.round(layer_cpp/tol).astype(int)))
-        set_py = set(map(tuple, np.round(layer_py/tol).astype(int)))
+        input_fname = "Fish_and_bird/" + input_fname
+        func_depth = "Fish_and_bird_exps/" + "func_depth_" + clear_name + ".txt"
+        output_fname = "Fish_and_bird_exps/" + "output_" + clear_name + ".txt"
+        points_depth = "Fish_and_bird_exps/" + "points_depth_" + clear_name + ".txt"
+        
+        # Запускаем Jarvis
+        hulls, exec_time_jarvis, func_depth_data = call_cpp(
+            input_fname=input_fname, 
+            func_depth=func_depth, 
+            algo="Jarvis", 
+            output_fname=output_fname, 
+            points_depth=points_depth
+        )
+        
+        # Запускаем Graham
+        _, exec_time_graham, _ = call_cpp(
+            input_fname=input_fname, 
+            func_depth=func_depth, 
+            algo="Graham", 
+            output_fname=output_fname, 
+            points_depth=points_depth
+        )
+        
+        M = len(hulls)
+        
+        # Добавляем данные в список
+        data.append({
+            'filename': clear_name,
+            'N points': func_depth_data[:, 1].sum(),
+            'M_layers': M,
+            'time_Jarvis_ms': exec_time_jarvis,
+            'time_Graham_ms': exec_time_graham,
+            'time_ratio': exec_time_jarvis / exec_time_graham if exec_time_graham != 0 else float('inf')
+        })
+    
+    # Создаем DataFrame
+    df = pd.DataFrame(data)
+    
+    # Сортируем по имени файла (опционально)
+    df = df.sort_values('filename')
+    
+    # Сохраняем в разные форматы
+    # df.to_csv('algorithm_comparison.csv', index=False)
+    df.to_excel('algorithm_comparison.xlsx', index=False)
+    
+    # Выводим статистику
+    print("\n" + "="*50)
+    print("СТАТИСТИКА АЛГОРИТМОВ:")
+    print("="*50)
+    print(f"Всего файлов: {len(df)}")
+    print(f"Среднее время Jarvis: {df['time_Jarvis_ms'].mean():.10f} ms")
+    print(f"Среднее время Graham: {df['time_Graham_ms'].mean():.10f} ms")
+    print(f"Медианное отношение времени (Jarvis/Graham): {df['time_ratio'].median():.2f}")
+    
+    # Подсчитываем, какой алгоритм быстрее в каждом случае
+    faster_jarsiv = (df['time_Jarvis_ms'] < df['time_Graham_ms']).sum()
+    faster_graham = (df['time_Graham_ms'] < df['time_Jarvis_ms']).sum()
+    print(f"Jarvis быстрее в: {faster_jarsiv} случаях")
+    print(f"Graham быстрее в: {faster_graham} случаях")
 
-        if set_cpp != set_py:
-            return False
+    print("\n" + "="*50)
+    print("ТОП-5 самых долгих случаев для Jarvis:")
+    print(df.nlargest(5, 'time_Jarvis_ms')[['filename', 'time_Jarvis_ms', 'time_Graham_ms']])
 
-    return True
+    print("\nТОП-5 самых долгих случаев для Graham:")
+    print(df.nlargest(5, 'time_Graham_ms')[['filename', 'time_Jarvis_ms', 'time_Graham_ms']])
+    
+    return df
 
-
-hulls_cpp = parse_hulls("output_hulls.txt")
-
-points = load_points("points.txt")
-
-hulls_py = onion_layers(points)
-
-cpp = sorted(hulls_cpp, key=len)
-pyt = sorted([len(x) for x in hulls_py])
-
-print(len(cpp[0]))
-print(pyt)
-
-print(hulls_equal(hulls_cpp, hulls_py))
+# Запускаем функцию
+results_df = execute_fish_and_bird()

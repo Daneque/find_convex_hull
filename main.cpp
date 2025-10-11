@@ -38,6 +38,7 @@ int main(int argc, char* argv[]) {
     savePointsDepth(hulls, points_depth);
 
     return 0;
+    
 }
 
     // std::vector<BinCH> bins = Chazell(points);//GetBins(points);

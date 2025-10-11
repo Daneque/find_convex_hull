@@ -10,10 +10,10 @@ def load_points(filename):
     """
     with open(filename, 'r') as f:
         # Пропускаем первую строку и читаем все остальные
-        return np.array([list(map(float, line.split())) 
-                        for line in f.readlines()[1:] 
+        return np.array([list(map(float, line.split()))
+                        for line in f.readlines()[1:]
                         if line.strip()])
-    
+
 
 def parse_func_depth(fname):
     data = np.loadtxt(fname)

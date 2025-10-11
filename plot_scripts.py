@@ -2,7 +2,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.widgets import Cursor
 
-# Альтернатива если файл без заголовка:
 def load_depth_data_no_header(filename):
     """
     Загружает данные о глубинах точек из файла без заголовка
@@ -10,7 +9,6 @@ def load_depth_data_no_header(filename):
     """
     data = np.loadtxt(filename)
     return data
-
 
 def plot_onion_decomposition(layers, points=None, max_layers=None, show_depth=False, depth_fname=None):
     """
@@ -22,19 +20,21 @@ def plot_onion_decomposition(layers, points=None, max_layers=None, show_depth=Fa
         Список оболочек, каждая оболочка - np.array формы (N, 2)
     points : np.array, optional
         Исходные точки для отображения
-    title : str
-        Заголовок графика
     max_layers : int, optional
         Максимальное количество слоев для отображения (по умолчанию все)
     show_depth : bool, optional
         Показывать глубину точек при наведении
-    depth_data : np.array, optional
-        Данные о глубинах точек формы (N, 3) [x, y, depth]
+    depth_fname : str, optional
+        Путь к файлу с данными о глубинах точек
     """
-
-    title = f"Onion Decomposition{len(layers)}"
-
-    depth_data = load_depth_data_no_header(depth_fname)
+    
+    # Загружаем данные о глубинах если указан файл
+    depth_data = None
+    if depth_fname is not None:
+        try:
+            depth_data = load_depth_data_no_header(depth_fname)
+        except Exception as e:
+            print(f"Warning: Could not load depth data from {depth_fname}: {e}")
 
     fig, ax = plt.subplots(figsize=(12, 10))
     
@@ -46,7 +46,7 @@ def plot_onion_decomposition(layers, points=None, max_layers=None, show_depth=Fa
     
     # Цвета для разных слоев (от темного к светлому)
     colors = plt.cm.viridis(np.linspace(0, 0.8, len(layers_to_plot)))
-    
+
     # ВСЕГДА рисуем все исходные точки
     if points is not None:
         plt.scatter(points[:, 0], points[:, 1], 
@@ -109,11 +109,10 @@ def plot_onion_decomposition(layers, points=None, max_layers=None, show_depth=Fa
     plt.xlabel('X')
     plt.ylabel('Y')
     
-    # Добавляем информацию о количестве отображенных слоев в заголовок
+    # Формируем заголовок
+    title = f"Onion Decomposition ({len(layers)} layers total)"
     if max_layers is not None:
-        title = f"{title} (first {max_layers} layers)"
-    else:
-        title = f"{title} (all {len(layers)} layers)"
+        title = f"{title} (showing first {max_layers} layers)"
     
     plt.title(title)
     plt.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
